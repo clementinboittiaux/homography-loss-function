@@ -9,5 +9,6 @@ We use `python 3.9.7` and `pip 21.2.4`.
 For example when setting up a conda environment :
 ```bash
 conda create -n homographyloss python=3.9.7 pip=21.2.4
+conda activate homographyloss
 pip install -r requirements.txt
 ```
