@@ -36,6 +36,7 @@ class RelocDataset(Dataset):
         `dataset` must be a list of dicts providing localization data for each image.
         Dicts must provide:
         {
+            'image_file': name of image file
             'image': torch.tensor image with shape (3, height, width)
             'w_t_c': camera-to-world translation
             'c_q_w': world-to-camera quaternion rotation
