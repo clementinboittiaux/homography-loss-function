@@ -38,14 +38,15 @@ class RelocDataset(Dataset):
         {
             'image_file': name of image file
             'image': torch.tensor image with shape (3, height, width)
-            'w_t_c': camera-to-world translation
-            'c_q_w': world-to-camera quaternion rotation
-            'c_R_w': world-to-camera rotation matrix (can be computed with quaternion_to_R)
-            'K': camera intrinsics matrix
-            'w_P': 3D observations of the image in the world frame
-            'c_p': reprojections of the 3D observations in the camera view (in pixels)
+            'w_t_c': torch.tensor camera-to-world translation with shape (3, 1)
+            'c_q_w': torch.tensor world-to-camera quaternion rotation with shape (4,) in format wxyz
+            'c_R_w': torch.tensor world-to-camera rotation matrix with shape (3, 3)
+                     (can be computed with quaternion_to_R)
+            'K': torch.tensor camera intrinsics matrix with shape (3, 3)
+            'w_P': torch.tensor 3D observations of the image in the world frame with shape (*, 3)
+            'c_p': reprojections of the 3D observations in the camera view (in pixels) with shape (*, 3)
             'xmin': minimum depth of observations
-            'xmax' maximum depth of observations
+            'xmax': maximum depth of observations
         }
         """
         self.data = dataset
