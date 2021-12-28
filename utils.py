@@ -75,7 +75,7 @@ def project(w_t_c, c_R_w, w_P, K=None):
     `w_t_c` is the (3, 1) shaped translation from frame c to frame w.
     `c_R_w` is the (3, 3) rotation matrix from frame w to frame c.
     `w_P` are (n, 3) shaped 3D points P expressed in the w frame.
-    `K` is frame b camera matrix.
+    `K` is frame c camera matrix.
     """
     c_p = c_R_w @ (w_P.T - w_t_c)
     if K is not None:
@@ -111,7 +111,7 @@ def batch_compute_utils(batch):
 
 def log_poses(log_file, batch, epoch, data_type):
     """
-    Logs batch estimated poses.
+    Logs batch estimated poses in log file.
     """
     log_file.write('\n'.join([
         f'{epoch},{image_file},{data_type},{",".join(map(str, w_t_chat.squeeze().tolist()))},'
@@ -123,7 +123,7 @@ def log_poses(log_file, batch, epoch, data_type):
 
 def log_errors(t_errors, q_errors, reprojection_errors, writer, epoch, data_type):
     """
-    Logs epoch poses errors.
+    Logs epoch poses errors in tensorboard.
     """
     t_errors = torch.hstack(t_errors)
     q_errors = torch.hstack(q_errors).rad2deg()
