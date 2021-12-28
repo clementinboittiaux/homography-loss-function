@@ -91,12 +91,17 @@ if __name__ == '__main__':
     # Instantiate adam optimizer
     optimizer = torch.optim.Adam(list(model.parameters()) + list(criterion.parameters()), lr=1e-4, eps=eps)
 
-    # Set up tensorboard and log files
+    # Set up tensorboard
     writer = SummaryWriter(os.path.join('logs', os.path.basename(os.path.normpath(args.path)), args.loss))
-    log_file = open(os.path.join(writer.log_dir, 'epochs_poses_log.csv'), mode='w', encoding='utf-8')
-    log_file.write('epoch,image_file,type,w_tx_chat,w_ty_chat,w_tz_chat,chat_qw_w,chat_qx_w,chat_qy_w,chat_qz_w\n')
+
+    # Set up folder to save weights
     if not os.path.exists(os.path.join(writer.log_dir, 'weights')):
         os.makedirs(os.path.join(writer.log_dir, 'weights'))
+
+    # Set up file to save logs
+    log_file_path = os.path.join(writer.log_dir, 'epochs_poses_log.csv')
+    with open(log_file_path, mode='w') as log_file:
+        log_file.write('epoch,image_file,type,w_tx_chat,w_ty_chat,w_tz_chat,chat_qw_w,chat_qx_w,chat_qy_w,chat_qz_w\n')
 
     print('Start training...')
     for epoch in tqdm.tqdm(range(5000)):
@@ -135,7 +140,8 @@ if __name__ == '__main__':
                 q_errors.append(batch_q_errors)
                 reprojection_errors += batch_reprojection_errors
 
-                log_poses(log_file, batch, epoch, 'train')
+                with open(log_file_path, mode='a') as log_file:
+                    log_poses(log_file, batch, epoch, 'train')
 
         # Log epoch loss
         writer.add_scalar('train loss', epoch_loss, epoch)
@@ -157,7 +163,8 @@ if __name__ == '__main__':
                 batch_compute_utils(batch)
 
                 # Log test poses
-                log_poses(log_file, batch, epoch, 'test')
+                with open(log_file_path, mode='a') as log_file:
+                    log_poses(log_file, batch, epoch, 'test')
 
                 # Compute test errors
                 batch_t_errors, batch_q_errors, batch_reprojection_errors = batch_errors(batch)
@@ -183,4 +190,3 @@ if __name__ == '__main__':
                 }, os.path.join(writer.log_dir, 'weights', f'epoch_{epoch}.pth'))
 
     writer.close()
-    log_file.close()
