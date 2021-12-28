@@ -182,7 +182,7 @@ if __name__ == '__main__':
             writer.flush()
             model.train()
 
-            # Save model and optimizer weight every n epochs:
+            # Save model and optimizer weights every 10 epochs:
             if epoch % 10 == 0:
                 torch.save({
                     'model_state_dict': model.state_dict(),
