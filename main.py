@@ -21,7 +21,11 @@ if __name__ == '__main__':
         choices=['local_homography', 'global_homography', 'posenet', 'homoscedastic', 'geometric', 'dsac'],
         default='local_homography'
     )
-    parser.add_argument('--device', help='"cuda" for GPU computing, else "cpu"', default='cuda')
+    parser.add_argument(
+        '--device', choices=['cuda', 'cpu'],
+        help='"cuda" for GPU computing, else "cpu"',
+        default='cpu'
+    )
     args = parser.parse_args()
 
     # Set seed for reproductibility
@@ -33,7 +37,7 @@ if __name__ == '__main__':
     # Load model
     model = models.load_model()
     model.train()
-    model.cuda()
+    model.to(args.device)
 
     # Load dataset
     dataset = datasets.CambridgeDataset(args.path)
