@@ -21,6 +21,12 @@ if __name__ == '__main__':
         choices=['local_homography', 'global_homography', 'posenet', 'homoscedastic', 'geometric', 'dsac'],
         default='local_homography'
     )
+    parser.add_argument('--epochs', help='number of epochs for training', type=int, default=5000)
+    parser.add_argument('--batch_size', help='training batch size', type=int, default=64)
+    parser.add_argument(
+        '--weights', metavar='WEIGHTS_PATH',
+        help='full path to weights with which the model will be initialized'
+    )
     parser.add_argument(
         '--cuda', action='store_true',
         help='train the model on GPU (may crash if cuda is not available)'
@@ -39,7 +45,7 @@ if __name__ == '__main__':
         device = 'cuda'
 
     # Load model
-    model = models.load_model()
+    model = models.load_model(args.weights)
     model.train()
     model.to(device)
 
@@ -53,7 +59,7 @@ if __name__ == '__main__':
     # Creating data loaders for train and test data
     train_loader = DataLoader(
         train_dataset,
-        batch_size=64,
+        batch_size=args.batch_size,
         shuffle=True,
         pin_memory=True,
         collate_fn=datasets.collate_fn,
@@ -108,7 +114,7 @@ if __name__ == '__main__':
         log_file.write('epoch,image_file,type,w_tx_chat,w_ty_chat,w_tz_chat,chat_qw_w,chat_qx_w,chat_qy_w,chat_qz_w\n')
 
     print('Start training...')
-    for epoch in tqdm.tqdm(range(5000)):
+    for epoch in tqdm.tqdm(range(args.epochs)):
         epoch_loss = 0
         t_errors, q_errors, reprojection_errors = [], [], []
 
