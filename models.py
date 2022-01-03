@@ -1,7 +1,7 @@
 import torch
 
 
-def load_model():
+def load_model(weights_path):
     """
     Loads MobileNetV2 pre-trained on ImageNet from PyTorch's cloud.
     Modifies last layers to fit our pose regression problem.
@@ -29,4 +29,6 @@ def load_model():
             bias=True
         )
     )
+    if weights_path is not None:
+        model.load_state_dict(torch.load(weights_path)['model_state_dict'])
     return model

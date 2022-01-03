@@ -15,9 +15,12 @@ from utils import batch_to_device, batch_errors, batch_compute_utils, log_poses,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('path', help='Full path to the dataset directory, e.g. "/home/data/KingsCollege"')
     parser.add_argument(
-        '--loss', help='Loss function for training',
+        'path', metavar='DATA_PATH',
+        help='full path to the dataset directory, e.g. "/home/data/KingsCollege"'
+    )
+    parser.add_argument(
+        '--loss', help='loss function for training',
         choices=['local_homography', 'global_homography', 'posenet', 'homoscedastic', 'geometric', 'dsac'],
         default='local_homography'
     )
@@ -67,7 +70,7 @@ if __name__ == '__main__':
     )
     test_loader = DataLoader(
         test_dataset,
-        batch_size=64,
+        batch_size=args.batch_size,
         shuffle=False,
         pin_memory=True,
         collate_fn=datasets.collate_fn
