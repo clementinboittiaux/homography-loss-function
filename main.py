@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         'path', metavar='DATA_PATH',
-        help='full path to the dataset directory, e.g. "/home/data/KingsCollege"'
+        help='path to the dataset directory, e.g. "/home/data/KingsCollege"'
     )
     parser.add_argument(
         '--loss', help='loss function for training',
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', help='training batch size', type=int, default=64)
     parser.add_argument(
         '--weights', metavar='WEIGHTS_PATH',
-        help='full path to weights with which the model will be initialized'
+        help='path to weights with which the model will be initialized'
     )
     parser.add_argument(
         '--cuda', action='store_true',

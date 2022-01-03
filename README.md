@@ -21,3 +21,20 @@ pip install -r requirements.txt
 ```
 
 ## Run relocalization
+The script [main.py](main.py) trains the network on a given scene.
+It requires one positional argument: the path to the scene on which to train the model.
+For example, for training the model on ShopFacade, simply run:
+```bash
+python main.py datasets/ShopFacade
+```
+
+Other available training options can be listed by running `python main.py -h`.
+
+## Monitor training and test results
+Training and test metrics are saved in a `logs` directory. One can monitor them using tensorboard.
+Simply run in a new terminal:
+```bash
+tensorboard --logdir logs
+```
+
+All estimated poses are also saved in a CSV file.

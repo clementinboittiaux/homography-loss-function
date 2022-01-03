@@ -16,9 +16,9 @@ script to setup all scenes at once.
 Setup scripts require `wget` and `unzip` installed.
 
 ### Installation
-For an individual scene setup, e.g. King's College, simply run in a terminal:
+For an individual scene setup, e.g. Shop Façade, simply run in a terminal:
 ```bash
-./setup_kingscollege.sh
+./setup_shopfacade.sh
 ```
 
 If you want to setup all scenes at once, simply run:
