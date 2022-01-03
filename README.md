@@ -1,9 +1,9 @@
 # Homography-based loss function for camera pose regression
-In this repository, we share our implementation of homography-based loss
-functions in an end-to-end pose regression network, similarly as
+In this repository, we share our implementation of several camera pose regression
+loss functions in a simple end-to-end network similar to
 [PoseNet](https://openaccess.thecvf.com/content_iccv_2015/html/Kendall_PoseNet_A_Convolutional_ICCV_2015_paper.html).
-We also re-implemented PoseNet, Homoscedastic, Geometric and DSAC loss
-functions. We provide the code to evaluate their performance on the Cambridge dataset.
+We implemented our homography-based loss functions and re-implemented PoseNet, Homoscedastic, Geometric and DSAC loss
+functions. We provide the code to train the network and evaluate their performance on the Cambridge dataset.
 
 ## Installation
 
