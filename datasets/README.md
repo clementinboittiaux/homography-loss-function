@@ -1,6 +1,6 @@
 # Cambridge dataset
 
-Here you can find instructions to setup the Cambridge dataset
+Here you can find instructions to setup the Cambridge dataset.
 
 ## Description
 
