@@ -196,10 +196,11 @@ if __name__ == '__main__':
             model.train()
 
             # Save model and optimizer weights every 10 epochs:
-            if epoch % 10 == 0:
+            if epoch % 500 == 0 or epoch == args.epochs - 1:
                 torch.save({
                     'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict()
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'criterion_state_dict': criterion.state_dict()
                 }, os.path.join(writer.log_dir, 'weights', f'epoch_{epoch}.pth'))
 
     writer.close()
