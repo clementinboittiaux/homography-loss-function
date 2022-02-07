@@ -7,11 +7,7 @@ def load_model(weights_path=None):
     Modifies last layers to fit our pose regression problem.
     """
     # Base model is MobileNetV2 from PyTorch's hub
-    model = torch.hub.load(
-        'pytorch/vision:v0.9.0',
-        'mobilenet_v2',
-        pretrained=True
-    )
+    model = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
 
     # We modify the classifier of MobileNetV2 with a custom regressor
     in_features = list(model.classifier.children())[-1].in_features
