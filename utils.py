@@ -91,11 +91,13 @@ def batch_errors(batch):
     t_errors = l2_loss(batch['w_t_chat'], batch['w_t_c'], reduce='none').squeeze()
     q_errors = angle_between_quaternions(batch['normalized_chat_q_w'], batch['c_q_w'])
     reprojection_errors = []
+    l1_reprojection_errors = []
     for w_t_chat, chat_R_w, w_P, c_p, K in zip(batch['w_t_chat'], batch['chat_R_w'], batch['w_P'],
                                                batch['c_p'], batch['K']):
         chat_p = project(w_t_chat, chat_R_w, w_P, K=K)
         reprojection_errors.append(torch.square(chat_p.T - c_p).sum(dim=1))
-    return t_errors, q_errors, reprojection_errors
+        l1_reprojection_errors.append(torch.abs(chat_p.T - c_p).sum(dim=1))
+    return t_errors, q_errors, reprojection_errors, l1_reprojection_errors
 
 
 def batch_compute_utils(batch):
@@ -121,7 +123,7 @@ def log_poses(log_file, batch, epoch, data_type):
     )
 
 
-def log_errors(t_errors, q_errors, reprojection_errors, writer, epoch, data_type):
+def log_errors(t_errors, q_errors, reprojection_errors, l1_reprojection_errors, writer, epoch, data_type):
     """
     Logs epoch poses errors in tensorboard.
     """
@@ -132,3 +134,4 @@ def log_errors(t_errors, q_errors, reprojection_errors, writer, epoch, data_type
     writer.add_scalar(f'{data_type} angle median', q_errors.median(), epoch)
     writer.add_scalar(f'{data_type} mean reprojection error', reprojection_errors.mean(), epoch)
     writer.add_scalar(f'{data_type} mean reprojection distance', reprojection_errors.sqrt().mean(), epoch)
+    writer.add_scalar(f'{data_type} mean l1 reprojection error', l1_reprojection_errors.mean(), epoch)
