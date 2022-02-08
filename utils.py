@@ -130,8 +130,16 @@ def log_errors(t_errors, q_errors, reprojection_errors, l1_reprojection_errors, 
     t_errors = torch.hstack(t_errors)
     q_errors = torch.hstack(q_errors).rad2deg()
     reprojection_errors = torch.hstack(reprojection_errors).clip(0, 1000000)
+
     writer.add_scalar(f'{data_type} distance median', t_errors.median(), epoch)
     writer.add_scalar(f'{data_type} angle median', q_errors.median(), epoch)
     writer.add_scalar(f'{data_type} mean reprojection error', reprojection_errors.mean(), epoch)
     writer.add_scalar(f'{data_type} mean reprojection distance', reprojection_errors.sqrt().mean(), epoch)
     writer.add_scalar(f'{data_type} mean l1 reprojection error', l1_reprojection_errors.mean(), epoch)
+
+    for meter_threshold, deg_threshold in zip([0.01, 0.02, 0.03, 0.05, 0.25, 0.5, 5], [1, 2, 3, 5, 2, 5, 10]):
+        score = torch.logical_and(t_errors <= meter_threshold, q_errors <= deg_threshold).sum() / t_errors.shape[0]
+        writer.add_scalar(
+            f'{data_type} percentage localized within {meter_threshold}m, {deg_threshold}deg',
+            score, epoch
+        )
