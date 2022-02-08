@@ -1,9 +1,12 @@
+import glob
 import os
 
+import numpy as np
 import pandas as pd
 import torch
 import tqdm
 from PIL import Image
+from kornia.geometry.conversions import rotation_matrix_to_quaternion, QuaternionCoeffOrder
 from torch.nn.functional import normalize
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -31,6 +34,7 @@ class RelocDataset(Dataset):
     """
     Dataset template class for use with PyTorch DataLoader class.
     """
+
     def __init__(self, dataset):
         """
         `dataset` must be a list of dicts providing localization data for each image.
@@ -44,7 +48,7 @@ class RelocDataset(Dataset):
                      (can be computed with quaternion_to_R)
             'K': torch.tensor camera intrinsics matrix with shape (3, 3)
             'w_P': torch.tensor 3D observations of the image in the world frame with shape (*, 3)
-            'c_p': reprojections of the 3D observations in the camera view (in pixels) with shape (*, 3)
+            'c_p': reprojections of the 3D observations in the camera view (in pixels) with shape (*, 2)
             'xmin': minimum depth of observations
             'xmax': maximum depth of observations
         }
@@ -73,6 +77,7 @@ class CambridgeDataset:
     """
     Template class to load every scene of Cambridge dataset.
     """
+
     def __init__(self, path):
         """
         `path` is the path to the dataset directory,
@@ -204,7 +209,139 @@ class CambridgeDataset:
         test_global_depths = torch.sort(torch.hstack(test_global_depths)).values
         self.train_global_xmin = train_global_depths[int(0.025 * (train_global_depths.shape[0] - 1))]
         self.train_global_xmax = train_global_depths[int(0.975 * (train_global_depths.shape[0] - 1))]
-        self.test_global_dmin = test_global_depths[int(0.025 * (test_global_depths.shape[0] - 1))]
-        self.test_global_dmax = test_global_depths[int(0.975 * (test_global_depths.shape[0] - 1))]
+        self.test_global_xmin = test_global_depths[int(0.025 * (test_global_depths.shape[0] - 1))]
+        self.test_global_xmax = test_global_depths[int(0.975 * (test_global_depths.shape[0] - 1))]
+        self.train_data = train_data
+        self.test_data = test_data
+
+
+class SevenScenesDataset:
+    """
+    Template class to load every scene from 7-Scenes dataset
+    """
+
+    def __init__(self, path):
+        preprocess = transforms.Compose([
+            transforms.Resize(256),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+
+        # Camera intrinsics
+        K = np.array([
+            [585, 0, 320],
+            [0, 585, 240],
+            [0, 0, 1]
+        ], dtype=np.float64)
+        K_inv = np.linalg.inv(K)
+        K_torch = torch.tensor(K, dtype=torch.float32)
+
+        # Grid of pixels
+        u = np.arange(640) + 0.5
+        v = np.arange(480) + 0.5
+        u, v = np.meshgrid(u, v)
+
+        # Array of all pixel positions in pixels
+        c_p_px = np.hstack([
+            u.reshape(-1, 1),
+            v.reshape(-1, 1),
+            np.ones((u.size, 1))
+        ])
+
+        # Array of all pixels in the sensor plane
+        c_p = K_inv @ c_p_px.T
+
+        train_data = []
+        test_data = []
+        train_global_depths = []
+        test_global_depths = []
+
+        for data, file, global_depths in [(train_data, 'TrainSplit.txt', train_global_depths),
+                                          (test_data, 'TestSplit.txt', test_global_depths)]:
+
+            with open(os.path.join(path, file), mode='r') as f:
+                seqs = [int(line[8:]) for line in f]
+
+            for seq in seqs:
+
+                seq_dir = os.path.join(path, f'seq-{seq:02d}')
+
+                print(f'Loading seq-{seq:02d}')
+
+                for frame in tqdm.tqdm(glob.glob(os.path.join(seq_dir, '*.color.png'))):
+
+                    frame = os.path.basename(frame).split('.')[0]
+                    image_path = os.path.join(seq_dir, f'{frame}.color.png')
+                    pose_path = os.path.join(seq_dir, f'{frame}.pose.txt')
+                    depth_path = os.path.join(seq_dir, f'{frame}.depth.png')
+
+                    image = preprocess(Image.open(image_path))
+
+                    # Read camera-to-world pose
+                    w_M_c = np.zeros((4, 4))
+                    with open(pose_path, mode='r') as f:
+                        for i, line in enumerate(f):
+                            w_M_c[i] = list(map(float, line.strip().split('\t')))
+
+                    # Read depth map
+                    Z = np.array(Image.open(depth_path)).reshape(-1, 1)
+
+                    # Filter outliers
+                    args_inliers = np.logical_and(Z > 0, Z != 65535).squeeze()
+
+                    # Unproject pixels
+                    c_P = c_p.T[args_inliers] * (Z[args_inliers] / 1000)
+
+                    # Convert 3D points from camera to world frame
+                    w_P = w_M_c[:3, :3] @ c_P.T + w_M_c[:3, 3:4]
+
+                    # Building rotation matrix and its quaternion
+                    w_M_c = torch.tensor(w_M_c)
+                    c_R_w = w_M_c[:3, :3].T.contiguous()
+                    c_q_w = rotation_matrix_to_quaternion(c_R_w, order=QuaternionCoeffOrder.WXYZ)
+
+                    # Keep the quaternion on the top hypershpere
+                    if c_q_w[0] < 0:
+                        c_q_w *= -1
+
+                    # Sort depths
+                    depths = Z[args_inliers].flatten()
+                    global_depths.append(depths)
+                    depths = np.sort(depths)
+
+                    data.append({
+                        'image_file': f'seq-{seq:02d}/{frame}.color.png',
+                        'image': image,
+                        'w_t_c': w_M_c[:3, 3:4].float(),
+                        'c_q_w': c_q_w.float(),
+                        'c_R_w': c_R_w.float(),
+                        'w_P': torch.tensor(w_P.T, dtype=torch.float32),
+                        'c_p': torch.tensor(c_p_px[args_inliers, :2], dtype=torch.float32),
+                        'K': K_torch,
+                        'xmin': torch.tensor(depths[int(0.025 * (depths.size - 1))] / 1000, dtype=torch.float32),
+                        'xmax': torch.tensor(depths[int(0.975 * (depths.size - 1))] / 1000, dtype=torch.float32)
+                    })
+
+        # Sort global depths
+        print('Sorting depths, this may take a while...')
+        train_global_depths = np.sort(np.hstack(train_global_depths))
+        test_global_depths = np.sort(np.hstack(test_global_depths))
+
+        self.train_global_xmin = torch.tensor(
+            train_global_depths[int(0.025 * (train_global_depths.size - 1))] / 1000,
+            dtype=torch.float32
+        )
+        self.train_global_xmax = torch.tensor(
+            train_global_depths[int(0.975 * (train_global_depths.size - 1))] / 1000,
+            dtype=torch.float32
+        )
+        self.test_global_xmin = torch.tensor(
+            test_global_depths[int(0.025 * (test_global_depths.size - 1))] / 1000,
+            dtype=torch.float32
+        )
+        self.test_global_xmax = torch.tensor(
+            test_global_depths[int(0.975 * (test_global_depths.size - 1))] / 1000,
+            dtype=torch.float32
+        )
         self.train_data = train_data
         self.test_data = test_data

@@ -1,10 +1,10 @@
 import argparse
 import os
-import tqdm
 import random
 
 import numpy as np
 import torch
+import tqdm
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
@@ -53,7 +53,13 @@ if __name__ == '__main__':
     model.to(device)
 
     # Load dataset
-    dataset = datasets.CambridgeDataset(args.path)
+    dataset_name = os.path.basename(os.path.normpath(args.path))
+    if dataset_name in ['GreatCourt', 'KingsCollege', 'OldHospital', 'ShopFacade', 'StMarysChurch', 'Street']:
+        dataset = datasets.CambridgeDataset(args.path)
+    elif dataset_name in ['chess', 'fire', 'heads', 'office', 'pumpkin', 'redkitchen', 'stairs']:
+        dataset = datasets.SevenScenesDataset(args.path)
+    else:
+        raise Exception(f'Dataset `{dataset_name}` not recognized...')
 
     # Wrapper for use with PyTorch's DataLoader
     train_dataset = datasets.RelocDataset(dataset.train_data)
@@ -169,7 +175,6 @@ if __name__ == '__main__':
             t_errors, q_errors, reprojection_errors = [], [], []
 
             for batch in test_loader:
-
                 # Compute test poses estimations
                 batch = batch_to_device(batch, device)
                 batch['w_t_chat'], batch['chat_q_w'] = model(batch['image']).split([3, 4], dim=1)
