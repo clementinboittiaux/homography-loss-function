@@ -26,6 +26,8 @@ if __name__ == '__main__':
     )
     parser.add_argument('--epochs', help='number of epochs for training', type=int, default=5000)
     parser.add_argument('--batch_size', help='training batch size', type=int, default=64)
+    parser.add_argument('--xmin_percentile', help='xmin depth percentile', type=float, default=0.025)
+    parser.add_argument('--xmax_percentile', help='xmax depth percentile', type=float, default=0.975)
     parser.add_argument(
         '--weights', metavar='WEIGHTS_PATH',
         help='path to weights with which the model will be initialized'
@@ -55,9 +57,9 @@ if __name__ == '__main__':
     # Load dataset
     dataset_name = os.path.basename(os.path.normpath(args.path))
     if dataset_name in ['GreatCourt', 'KingsCollege', 'OldHospital', 'ShopFacade', 'StMarysChurch', 'Street']:
-        dataset = datasets.CambridgeDataset(args.path)
+        dataset = datasets.CambridgeDataset(args.path, args.xmin_percentile, args.xmax_percentile)
     elif dataset_name in ['chess', 'fire', 'heads', 'office', 'pumpkin', 'redkitchen', 'stairs']:
-        dataset = datasets.SevenScenesDataset(args.path)
+        dataset = datasets.SevenScenesDataset(args.path, args.xmin_percentile, args.xmax_percentile)
     else:
         raise Exception(f'Dataset `{dataset_name}` not recognized...')
 

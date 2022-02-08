@@ -78,7 +78,7 @@ class CambridgeDataset:
     Template class to load every scene of Cambridge dataset.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, xmin_percentile, xmax_percentile):
         """
         `path` is the path to the dataset directory,
         e.g. for King's College: "/home/data/KingsCollege".
@@ -201,16 +201,16 @@ class CambridgeDataset:
                         'w_P': w_P[args_inliers],
                         'c_p': c_p.T[args_inliers],
                         'K': view['K'],
-                        'xmin': depths[int(0.025 * (depths.shape[0] - 1))],
-                        'xmax': depths[int(0.975 * (depths.shape[0] - 1))]
+                        'xmin': depths[int(xmin_percentile * (depths.shape[0] - 1))],
+                        'xmax': depths[int(xmax_percentile * (depths.shape[0] - 1))]
                     })
 
         train_global_depths = torch.sort(torch.hstack(train_global_depths)).values
         test_global_depths = torch.sort(torch.hstack(test_global_depths)).values
-        self.train_global_xmin = train_global_depths[int(0.025 * (train_global_depths.shape[0] - 1))]
-        self.train_global_xmax = train_global_depths[int(0.975 * (train_global_depths.shape[0] - 1))]
-        self.test_global_xmin = test_global_depths[int(0.025 * (test_global_depths.shape[0] - 1))]
-        self.test_global_xmax = test_global_depths[int(0.975 * (test_global_depths.shape[0] - 1))]
+        self.train_global_xmin = train_global_depths[int(xmin_percentile * (train_global_depths.shape[0] - 1))]
+        self.train_global_xmax = train_global_depths[int(xmax_percentile * (train_global_depths.shape[0] - 1))]
+        self.test_global_xmin = test_global_depths[int(xmin_percentile * (test_global_depths.shape[0] - 1))]
+        self.test_global_xmax = test_global_depths[int(xmax_percentile * (test_global_depths.shape[0] - 1))]
         self.train_data = train_data
         self.test_data = test_data
 
@@ -220,7 +220,7 @@ class SevenScenesDataset:
     Template class to load every scene from 7-Scenes dataset
     """
 
-    def __init__(self, path):
+    def __init__(self, path, xmin_percentile, xmax_percentile):
         preprocess = transforms.Compose([
             transforms.Resize(256),
             transforms.ToTensor(),
@@ -318,8 +318,12 @@ class SevenScenesDataset:
                         'w_P': torch.tensor(w_P.T, dtype=torch.float32),
                         'c_p': torch.tensor(c_p_px[args_inliers, :2], dtype=torch.float32),
                         'K': K_torch,
-                        'xmin': torch.tensor(depths[int(0.025 * (depths.size - 1))] / 1000, dtype=torch.float32),
-                        'xmax': torch.tensor(depths[int(0.975 * (depths.size - 1))] / 1000, dtype=torch.float32)
+                        'xmin': torch.tensor(
+                            depths[int(xmin_percentile * (depths.size - 1))] / 1000, dtype=torch.float32
+                        ),
+                        'xmax': torch.tensor(
+                            depths[int(xmax_percentile * (depths.size - 1))] / 1000, dtype=torch.float32
+                        )
                     })
 
         # Sort global depths
@@ -328,19 +332,19 @@ class SevenScenesDataset:
         test_global_depths = np.sort(np.hstack(test_global_depths))
 
         self.train_global_xmin = torch.tensor(
-            train_global_depths[int(0.025 * (train_global_depths.size - 1))] / 1000,
+            train_global_depths[int(xmin_percentile * (train_global_depths.size - 1))] / 1000,
             dtype=torch.float32
         )
         self.train_global_xmax = torch.tensor(
-            train_global_depths[int(0.975 * (train_global_depths.size - 1))] / 1000,
+            train_global_depths[int(xmax_percentile * (train_global_depths.size - 1))] / 1000,
             dtype=torch.float32
         )
         self.test_global_xmin = torch.tensor(
-            test_global_depths[int(0.025 * (test_global_depths.size - 1))] / 1000,
+            test_global_depths[int(xmin_percentile * (test_global_depths.size - 1))] / 1000,
             dtype=torch.float32
         )
         self.test_global_xmax = torch.tensor(
-            test_global_depths[int(0.975 * (test_global_depths.size - 1))] / 1000,
+            test_global_depths[int(xmax_percentile * (test_global_depths.size - 1))] / 1000,
             dtype=torch.float32
         )
         self.train_data = train_data
