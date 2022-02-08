@@ -97,7 +97,13 @@ def batch_errors(batch):
         chat_p = project(w_t_chat, chat_R_w, w_P, K=K)
         reprojection_errors.append(torch.square(chat_p.T - c_p).sum(dim=1))
         l1_reprojection_errors.append(torch.abs(chat_p.T - c_p).sum(dim=1))
-    return t_errors, q_errors, reprojection_errors, l1_reprojection_errors
+    reprojection_errors = torch.hstack(reprojection_errors).clip(0, 1000000)
+    l1_reprojection_errors = torch.hstack(l1_reprojection_errors)
+    repr_squared_sum = reprojection_errors.sum()
+    repr_sum = reprojection_errors.sqrt().sum()
+    l1_repr_sum = l1_reprojection_errors.sum()
+    n_points = reprojection_errors.shape[0]
+    return t_errors, q_errors, repr_squared_sum, repr_sum, l1_repr_sum, n_points
 
 
 def batch_compute_utils(batch):
@@ -123,19 +129,18 @@ def log_poses(log_file, batch, epoch, data_type):
     )
 
 
-def log_errors(t_errors, q_errors, reprojection_errors, l1_reprojection_errors, writer, epoch, data_type):
+def log_errors(t_errors, q_errors, repr_squared_sum, repr_sum, l1_repr_sum, n_points, writer, epoch, data_type):
     """
     Logs epoch poses errors in tensorboard.
     """
     t_errors = torch.hstack(t_errors)
     q_errors = torch.hstack(q_errors).rad2deg()
-    reprojection_errors = torch.hstack(reprojection_errors).clip(0, 1000000)
 
     writer.add_scalar(f'{data_type} distance median', t_errors.median(), epoch)
     writer.add_scalar(f'{data_type} angle median', q_errors.median(), epoch)
-    writer.add_scalar(f'{data_type} mean reprojection error', reprojection_errors.mean(), epoch)
-    writer.add_scalar(f'{data_type} mean reprojection distance', reprojection_errors.sqrt().mean(), epoch)
-    writer.add_scalar(f'{data_type} mean l1 reprojection error', l1_reprojection_errors.mean(), epoch)
+    writer.add_scalar(f'{data_type} mean reprojection error', repr_squared_sum / n_points, epoch)
+    writer.add_scalar(f'{data_type} mean reprojection distance', repr_sum / n_points, epoch)
+    writer.add_scalar(f'{data_type} mean l1 reprojection error', l1_repr_sum / n_points, epoch)
 
     for meter_threshold, deg_threshold in zip([0.01, 0.02, 0.03, 0.05, 0.25, 0.5, 5], [1, 2, 3, 5, 2, 5, 10]):
         score = torch.logical_and(t_errors <= meter_threshold, q_errors <= deg_threshold).sum() / t_errors.shape[0]

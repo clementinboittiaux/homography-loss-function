@@ -127,7 +127,8 @@ if __name__ == '__main__':
     print('Start training...')
     for epoch in tqdm.tqdm(range(args.epochs)):
         epoch_loss = 0
-        t_errors, q_errors, reprojection_errors, l1_reprojection_errors = [], [], [], []
+        t_errors, q_errors = [], []
+        repr_squared_sum, repr_sum, l1_repr_sum, n_points = 0, 0, 0, 0
 
         for batch in train_loader:
             optimizer.zero_grad()
@@ -156,11 +157,14 @@ if __name__ == '__main__':
 
             # Compute training batch errors and log poses
             with torch.no_grad():
-                batch_t_errors, batch_q_errors, batch_repr_errors, batch_l1_repr_errors = batch_errors(batch)
+                batch_t_errors, batch_q_errors, batch_repr_squared_sum, batch_repr_sum, batch_l1_repr_sum, \
+                    batch_n_points = batch_errors(batch)
                 t_errors.append(batch_t_errors)
                 q_errors.append(batch_q_errors)
-                reprojection_errors += batch_repr_errors
-                l1_reprojection_errors += batch_l1_repr_errors
+                repr_squared_sum += batch_repr_squared_sum
+                repr_sum += batch_repr_sum
+                l1_repr_sum += batch_l1_repr_sum
+                n_points += batch_n_points
 
                 with open(log_file_path, mode='a') as log_file:
                     log_poses(log_file, batch, epoch, 'train')
@@ -171,11 +175,12 @@ if __name__ == '__main__':
         with torch.no_grad():
 
             # Log train errors
-            log_errors(t_errors, q_errors, reprojection_errors, l1_reprojection_errors, writer, epoch, 'train')
+            log_errors(t_errors, q_errors, repr_squared_sum, repr_sum, l1_repr_sum, n_points, writer, epoch, 'train')
 
             # Set the model to eval mode for test data
             model.eval()
-            t_errors, q_errors, reprojection_errors, l1_reprojection_errors = [], [], [], []
+            t_errors, q_errors = [], []
+            repr_squared_sum, repr_sum, l1_repr_sum, n_points = 0, 0, 0, 0
 
             for batch in test_loader:
                 # Compute test poses estimations
@@ -188,14 +193,17 @@ if __name__ == '__main__':
                     log_poses(log_file, batch, epoch, 'test')
 
                 # Compute test errors
-                batch_t_errors, batch_q_errors, batch_repr_errors, batch_l1_repr_errors = batch_errors(batch)
+                batch_t_errors, batch_q_errors, batch_repr_squared_sum, batch_repr_sum, batch_l1_repr_sum, \
+                    batch_n_points = batch_errors(batch)
                 t_errors.append(batch_t_errors)
                 q_errors.append(batch_q_errors)
-                reprojection_errors += batch_repr_errors
-                l1_reprojection_errors += batch_l1_repr_errors
+                repr_squared_sum += batch_repr_squared_sum
+                repr_sum += batch_repr_sum
+                l1_repr_sum += batch_l1_repr_sum
+                n_points += batch_n_points
 
             # Log test errors
-            log_errors(t_errors, q_errors, reprojection_errors, l1_reprojection_errors, writer, epoch, 'test')
+            log_errors(t_errors, q_errors, repr_squared_sum, repr_sum, l1_repr_sum, n_points, writer, epoch, 'test')
 
             # Log loss parameters, if there are any
             for p_name, p in criterion.named_parameters():
