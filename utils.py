@@ -84,26 +84,35 @@ def project(w_t_c, c_R_w, w_P, K=None):
     return c_p
 
 
-def batch_errors(batch):
+def batch_errors(batch, errors):
     """
     Computes translation, rotation and reprojection errors for the batch.
     """
-    t_errors = l2_loss(batch['w_t_chat'], batch['w_t_c'], reduce='none').squeeze()
-    q_errors = angle_between_quaternions(batch['normalized_chat_q_w'], batch['c_q_w'])
-    reprojection_errors = []
-    l1_reprojection_errors = []
+    b_errors = {
+        't_errors': [l2_loss(batch['w_t_chat'], batch['w_t_c'], reduce='none').squeeze()],
+        'q_errors': [angle_between_quaternions(batch['normalized_chat_q_w'], batch['c_q_w'])],
+        'reprojection_error_sum': 0,
+        'reprojection_distance_sum': 0,
+        'l1_reprojection_error_sum': 0,
+        'n_points': 0
+    }
+
     for w_t_chat, chat_R_w, w_P, c_p, K in zip(batch['w_t_chat'], batch['chat_R_w'], batch['w_P'],
                                                batch['c_p'], batch['K']):
         chat_p = project(w_t_chat, chat_R_w, w_P, K=K)
-        reprojection_errors.append(torch.square(chat_p.T - c_p).sum(dim=1))
-        l1_reprojection_errors.append(torch.abs(chat_p.T - c_p).sum(dim=1))
-    reprojection_errors = torch.hstack(reprojection_errors).clip(0, 1000000)
-    l1_reprojection_errors = torch.hstack(l1_reprojection_errors)
-    repr_squared_sum = reprojection_errors.sum()
-    repr_sum = reprojection_errors.sqrt().sum()
-    l1_repr_sum = l1_reprojection_errors.sum()
-    n_points = reprojection_errors.shape[0]
-    return t_errors, q_errors, repr_squared_sum, repr_sum, l1_repr_sum, n_points
+        diff = chat_p.T - c_p
+        reprojection_errors = torch.square(diff).sum(dim=1).clip(0, 1000000)
+        b_errors['reprojection_error_sum'] += reprojection_errors.sum()
+        b_errors['reprojection_distance_sum'] += reprojection_errors.sqrt().sum()
+        b_errors['l1_reprojection_error_sum'] += torch.abs(diff).sum(dim=1).clip(0, 1000000).sum()
+        b_errors['n_points'] += c_p.shape[0]
+
+    if len(errors) == 0:
+        for key, value in b_errors.items():
+            errors[key] = value
+    else:
+        for key, value in b_errors.items():
+            errors[key] += value
 
 
 def batch_compute_utils(batch):
@@ -129,21 +138,32 @@ def log_poses(log_file, batch, epoch, data_type):
     )
 
 
-def log_errors(t_errors, q_errors, repr_squared_sum, repr_sum, l1_repr_sum, n_points, writer, epoch, data_type):
+def log_errors(errors, writer, epoch, data_type):
     """
     Logs epoch poses errors in tensorboard.
     """
-    t_errors = torch.hstack(t_errors)
-    q_errors = torch.hstack(q_errors).rad2deg()
+    t_errors = torch.hstack(errors['t_errors'])
+    q_errors = torch.hstack(errors['q_errors']).rad2deg()
 
     writer.add_scalar(f'{data_type} distance median', t_errors.median(), epoch)
     writer.add_scalar(f'{data_type} angle median', q_errors.median(), epoch)
-    writer.add_scalar(f'{data_type} mean reprojection error', repr_squared_sum / n_points, epoch)
-    writer.add_scalar(f'{data_type} mean reprojection distance', repr_sum / n_points, epoch)
-    writer.add_scalar(f'{data_type} mean l1 reprojection error', l1_repr_sum / n_points, epoch)
+    writer.add_scalar(
+        f'{data_type} mean reprojection error',
+        errors['reprojection_error_sum'] / errors['n_points'], epoch
+    )
+    writer.add_scalar(
+        f'{data_type} mean reprojection distance',
+        errors['reprojection_distance_sum'] / errors['n_points'], epoch
+    )
+    writer.add_scalar(
+        f'{data_type} mean l1 reprojection error',
+        errors['l1_reprojection_error_sum'] / errors['n_points'], epoch
+    )
 
     for meter_threshold, deg_threshold in zip([0.01, 0.02, 0.03, 0.05, 0.25, 0.5, 5], [1, 2, 3, 5, 2, 5, 10]):
-        score = torch.logical_and(t_errors <= meter_threshold, q_errors <= deg_threshold).sum() / t_errors.shape[0]
+        score = torch.logical_and(
+            t_errors <= meter_threshold, q_errors <= deg_threshold
+        ).sum() / t_errors.shape[0]
         writer.add_scalar(
             f'{data_type} percentage localized within {meter_threshold}m, {deg_threshold}deg',
             score, epoch

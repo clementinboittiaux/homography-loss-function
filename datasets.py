@@ -247,6 +247,7 @@ class SevenScenesDataset:
             v.reshape(-1, 1),
             np.ones((u.size, 1))
         ])
+        c_p_px_torch = torch.tensor(c_p_px[:, :2], dtype=torch.float32)
 
         # Array of all pixels in the sensor plane
         c_p = K_inv @ c_p_px.T
@@ -316,7 +317,7 @@ class SevenScenesDataset:
                         'c_q_w': c_q_w.float(),
                         'c_R_w': c_R_w.float(),
                         'w_P': torch.tensor(w_P.T, dtype=torch.float32),
-                        'c_p': torch.tensor(c_p_px[args_inliers, :2], dtype=torch.float32),
+                        'c_p': c_p_px_torch[args_inliers],
                         'K': K_torch,
                         'xmin': torch.tensor(
                             depths[int(xmin_percentile * (depths.size - 1))] / 1000, dtype=torch.float32
