@@ -14,6 +14,14 @@ from torchvision import transforms
 from quaternions import quaternion_to_R
 
 
+# Image preprocessing pipeline according to PyTorch implementation
+preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+
 def collate_fn(views):
     """
     Transforms list of dicts [{key1: value1, key2:value2}, {key1: value3, key2:value4}]
@@ -86,12 +94,6 @@ class CambridgeDataset:
           - 2 lists of dicts (train and test) providing localization data for each image.
           - 4 parameters (train and test) for minimum and maximum depths of observations.
         """
-        # Image preprocessing pipeline according to PyTorch implementation
-        preprocess = transforms.Compose([
-            transforms.Resize(256),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
         views = []
         scene_coordinates = []
         with open(os.path.join(path, 'reconstruction.nvm'), mode='r') as file:
@@ -221,11 +223,6 @@ class SevenScenesDataset:
     """
 
     def __init__(self, path, xmin_percentile, xmax_percentile):
-        preprocess = transforms.Compose([
-            transforms.Resize(256),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
 
         # Camera intrinsics
         K = np.array([
@@ -301,7 +298,7 @@ class SevenScenesDataset:
                     c_R_w = w_M_c[:3, :3].T.contiguous()
                     c_q_w = rotation_matrix_to_quaternion(c_R_w, order=QuaternionCoeffOrder.WXYZ)
 
-                    # Keep the quaternion on the top hypershpere
+                    # Keep the quaternion on the top hypersphere
                     if c_q_w[0] < 0:
                         c_q_w *= -1
 
