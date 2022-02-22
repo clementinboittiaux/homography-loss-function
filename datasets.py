@@ -10,6 +10,7 @@ from kornia.geometry.conversions import rotation_matrix_to_quaternion, Quaternio
 from torch.nn.functional import normalize
 from torch.utils.data import Dataset
 from torchvision import transforms
+from hloc.hloc.utils.read_write_model import read_model
 
 from quaternions import quaternion_to_R
 
@@ -345,5 +346,89 @@ class SevenScenesDataset:
             test_global_depths[int(xmax_percentile * (test_global_depths.size - 1))] / 1000,
             dtype=torch.float32
         )
+        self.train_data = train_data
+        self.test_data = test_data
+
+
+class COLMAPDataset:
+    """
+    WIP class to load COLMAP scenes
+    """
+
+    def __init__(self, path, xmin_percentile, xmax_percentile):
+
+        print('COLMAPDataset is work in progress, do not use!')
+
+        images_path = os.path.join(path, 'images')
+        list_query = os.path.join(path, 'list_query.txt')
+        list_db = os.path.join(path, 'list_db.txt')
+
+        cameras, images, points3D = read_model(path)
+
+        image_name_to_id = {image.name: i for i, image in images.items()}
+
+        scene_coordinates = torch.zeros(max(points3D.keys()) + 1, 3, dtype=torch.float64)
+        for i, point3D in points3D.items():
+            scene_coordinates[i] = torch.tensor(point3D.xyz)
+
+        train_data = []
+        test_data = []
+        train_global_depths = []
+        test_global_depths = []
+
+        for data, file, global_depths in zip([train_data, test_data],
+                                             [list_db, list_query],
+                                             [train_global_depths, test_global_depths]):
+            with open(file, 'r') as f:
+                image_names = f.read().splitlines()
+
+            for image_name in tqdm.tqdm(image_names):
+
+                image = images[image_name_to_id[image_name]]
+
+                f, u0, v0, _, _ = cameras[image.camera_id].params
+                K = torch.tensor([
+                    [f, 0, u0],
+                    [0, f, v0],
+                    [0, 0, 1]
+                ])
+
+                c_t_w = torch.tensor(image.tvec).view(3, 1)
+                c_q_w = torch.tensor(image.qvec)
+
+                # Keep the quaternion on the top hypersphere
+                if c_q_w[0] < 0:
+                    c_q_w *= -1
+
+                c_R_w = quaternion_to_R(c_q_w)[0]
+                w_t_c = -c_R_w.T @ c_t_w
+
+                w_P = scene_coordinates[[i for i in image.point3D_ids if i != -1]]
+                c_P = c_R_w @ (w_P.T - w_t_c)
+                c_p = K @ c_P
+                c_p = c_p[:2] / c_p[2]
+
+                depths = torch.sort(c_P[2]).values
+                global_depths.append(depths.float())
+
+                data.append({
+                    'image_file': image_name,
+                    'image': preprocess(Image.open(os.path.join(images_path, image_name))),
+                    'w_t_c': w_t_c.float(),
+                    'c_q_w': c_q_w.float(),
+                    'c_R_w': c_R_w.float(),
+                    'w_P': w_P.float(),
+                    'c_p': c_p.T.float(),
+                    'K': K.float(),
+                    'xmin': depths[int(xmin_percentile * (depths.shape[0] - 1))].float(),
+                    'xmax': depths[int(xmax_percentile * (depths.shape[0] - 1))].float()
+                })
+
+        train_global_depths = torch.sort(torch.hstack(train_global_depths)).values
+        test_global_depths = torch.sort(torch.hstack(test_global_depths)).values
+        self.train_global_xmin = train_global_depths[int(xmin_percentile * (train_global_depths.shape[0] - 1))]
+        self.train_global_xmax = train_global_depths[int(xmax_percentile * (train_global_depths.shape[0] - 1))]
+        self.test_global_xmin = test_global_depths[int(xmin_percentile * (test_global_depths.shape[0] - 1))]
+        self.test_global_xmax = test_global_depths[int(xmax_percentile * (test_global_depths.shape[0] - 1))]
         self.train_data = train_data
         self.test_data = test_data
