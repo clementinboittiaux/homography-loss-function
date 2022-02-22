@@ -1,5 +1,6 @@
 import glob
 import os
+import cv2
 
 import numpy as np
 import pandas as pd
@@ -352,12 +353,19 @@ class SevenScenesDataset:
 
 class COLMAPDataset:
     """
-    WIP class to load COLMAP scenes
+    WIP class to load COLMAP scenes. Only RADIAL camera model is supported.
     """
 
     def __init__(self, path, xmin_percentile, xmax_percentile):
+        """
+        `path` to a folder containing:
+          - COLMAP model
+          - an `images` directory containing all images
+          - two lists named `list_db.txt` and `list_query.txt` containing
+            respectively the name of database and query images (one per line)
+        """
 
-        print('COLMAPDataset is work in progress, do not use!')
+        print('COLMAPDataset is work in progress, only handles RADIAL camera model!')
 
         images_path = os.path.join(path, 'images')
         list_query = os.path.join(path, 'list_query.txt')
@@ -385,13 +393,23 @@ class COLMAPDataset:
             for image_name in tqdm.tqdm(image_names):
 
                 image = images[image_name_to_id[image_name]]
+                camera = cameras[image.camera_id]
 
-                f, u0, v0, _, _ = cameras[image.camera_id].params
-                K = torch.tensor([
+                f, u0, v0, k1, k2 = camera.params
+                K = np.array([
                     [f, 0, u0],
                     [0, f, v0],
                     [0, 0, 1]
                 ])
+                new_K = torch.tensor(K)
+                new_K[0, 2] = camera.width / 2
+                new_K[1, 2] = camera.height / 2
+                dist_coeffs = np.array([k1, k2, 0, 0])
+
+                # Undistort image and center its principal point
+                im = cv2.imread(os.path.join(images_path, image_name))
+                im = cv2.undistort(im, K, dist_coeffs, newCameraMatrix=new_K.numpy())
+                im = preprocess(Image.fromarray(im[:, :, ::-1]))
 
                 c_t_w = torch.tensor(image.tvec).view(3, 1)
                 c_q_w = torch.tensor(image.qvec)
@@ -405,7 +423,7 @@ class COLMAPDataset:
 
                 w_P = scene_coordinates[[i for i in image.point3D_ids if i != -1]]
                 c_P = c_R_w @ (w_P.T - w_t_c)
-                c_p = K @ c_P
+                c_p = new_K @ c_P
                 c_p = c_p[:2] / c_p[2]
 
                 depths = torch.sort(c_P[2]).values
@@ -413,13 +431,13 @@ class COLMAPDataset:
 
                 data.append({
                     'image_file': image_name,
-                    'image': preprocess(Image.open(os.path.join(images_path, image_name))),
+                    'image': im,
                     'w_t_c': w_t_c.float(),
                     'c_q_w': c_q_w.float(),
                     'c_R_w': c_R_w.float(),
                     'w_P': w_P.float(),
                     'c_p': c_p.T.float(),
-                    'K': K.float(),
+                    'K': new_K.float(),
                     'xmin': depths[int(xmin_percentile * (depths.shape[0] - 1))].float(),
                     'xmax': depths[int(xmax_percentile * (depths.shape[0] - 1))].float()
                 })
