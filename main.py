@@ -61,7 +61,7 @@ if __name__ == '__main__':
     elif dataset_name in ['chess', 'fire', 'heads', 'office', 'pumpkin', 'redkitchen', 'stairs']:
         dataset = datasets.SevenScenesDataset(args.path, args.xmin_percentile, args.xmax_percentile)
     else:
-        raise Exception(f'Dataset `{dataset_name}` not recognized...')
+        dataset = datasets.COLMAPDataset(args.path, args.xmin_percentile, args.xmax_percentile)
 
     # Wrapper for use with PyTorch's DataLoader
     train_dataset = datasets.RelocDataset(dataset.train_data)

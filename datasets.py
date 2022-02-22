@@ -362,7 +362,7 @@ class COLMAPDataset:
           - COLMAP model
           - an `images` directory containing all images
           - two lists named `list_db.txt` and `list_query.txt` containing
-            respectively the name of database and query images (one per line)
+            respectively the names of database and query images (one name per line)
         """
 
         print('COLMAPDataset is work in progress, only handles RADIAL camera model!')
