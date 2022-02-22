@@ -160,7 +160,10 @@ def log_errors(errors, writer, epoch, data_type):
         errors['l1_reprojection_error_sum'] / errors['n_points'], epoch
     )
 
-    for meter_threshold, deg_threshold in zip([0.05, 0.15, 0.25, 0.5, 0.5, 1, 2, 3], [2, 5, 10, 15, 0.5, 1, 2.5, 5]):
+    for meter_threshold, deg_threshold in zip(
+            [0.05, 0.15, 0.25, 0.5, 0.01, 0.02, 0.03, 0.05, 0.25, 0.5, 5],
+            [2, 5, 10, 15, 1, 2, 3, 5, 2, 5, 10]
+    ):
         score = torch.logical_and(
             t_errors <= meter_threshold, q_errors <= deg_threshold
         ).sum() / t_errors.shape[0]
