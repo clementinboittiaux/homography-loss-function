@@ -1,7 +1,6 @@
 import torch
 
-from utils import angle_between_quaternions
-from utils import l1_loss, l2_loss, compute_ABC, project
+from utils import angle_between_quaternions, l1_loss, l2_loss, compute_ABC, project
 
 
 class LocalHomographyLoss(torch.nn.Module):

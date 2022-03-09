@@ -13,7 +13,6 @@ import losses
 import models
 from utils import batch_to_device, batch_errors, batch_compute_utils, log_poses, log_errors
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
@@ -197,7 +196,7 @@ if __name__ == '__main__':
             writer.flush()
             model.train()
 
-            # Save model and optimizer weights every 10 epochs:
+            # Save model and optimizer weights every n and last epochs:
             if epoch % 500 == 0 or epoch == args.epochs - 1:
                 torch.save({
                     'model_state_dict': model.state_dict(),
