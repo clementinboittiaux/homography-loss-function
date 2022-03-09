@@ -7,13 +7,15 @@ import pandas as pd
 import torch
 import tqdm
 from PIL import Image
-from kornia.geometry.conversions import rotation_matrix_to_quaternion, QuaternionCoeffOrder
+from kornia.geometry.conversions import (
+    rotation_matrix_to_quaternion,
+    quaternion_to_rotation_matrix,
+    QuaternionCoeffOrder
+)
 from torch.nn.functional import normalize
 from torch.utils.data import Dataset
 from torchvision import transforms
 from hloc.hloc.utils.read_write_model import read_model
-
-from quaternions import quaternion_to_R
 
 
 # Image preprocessing pipeline according to PyTorch implementation
@@ -165,7 +167,7 @@ class CambridgeDataset:
                 image = preprocess(Image.open(os.path.join(path, image_file)))
                 w_t_c = torch.tensor(line[1:4].tolist()).view(3, 1)
                 c_q_w = normalize(torch.tensor(line[4:8].tolist()), dim=0)
-                c_R_w = quaternion_to_R(c_q_w)[0]
+                c_R_w = quaternion_to_rotation_matrix(c_q_w, order=QuaternionCoeffOrder.WXYZ)
                 view = views[os.path.splitext(image_file)[0] + '.jpg']
                 w_P = scene_coordinates[view['observations_ids']]
                 c_P = c_R_w @ (w_P.T - w_t_c)
@@ -418,7 +420,7 @@ class COLMAPDataset:
                 if c_q_w[0] < 0:
                     c_q_w *= -1
 
-                c_R_w = quaternion_to_R(c_q_w)[0]
+                c_R_w = quaternion_to_rotation_matrix(c_q_w, order=QuaternionCoeffOrder.WXYZ)
                 w_t_c = -c_R_w.T @ c_t_w
 
                 w_P = scene_coordinates[[i for i in image.point3D_ids if i != -1]]

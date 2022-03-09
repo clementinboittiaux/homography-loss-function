@@ -1,6 +1,14 @@
 import torch
-from quaternions import angle_between_quaternions, quaternion_to_R
 from torch.nn.functional import normalize
+from kornia.geometry.conversions import quaternion_to_rotation_matrix, QuaternionCoeffOrder
+
+
+def angle_between_quaternions(q, r):
+    """
+    Works on batchs of quaternions only.
+    `q` and `r` must be batchs of unit quaternions with shape (n, 4).
+    """
+    return 2 * torch.sum(q * r, dim=1).abs().clip(0, 1).arccos()
 
 
 def l1_loss(input, target, reduce='mean'):
@@ -123,7 +131,7 @@ def batch_compute_utils(batch):
     """
     batch['w_t_chat'] = batch['w_t_chat'].view(-1, 3, 1)
     batch['normalized_chat_q_w'] = normalize(batch['chat_q_w'], dim=1)
-    batch['chat_R_w'] = quaternion_to_R(batch['normalized_chat_q_w'].T)
+    batch['chat_R_w'] = quaternion_to_rotation_matrix(batch['chat_q_w'], order=QuaternionCoeffOrder.WXYZ)
 
 
 def log_poses(log_file, batch, epoch, data_type):

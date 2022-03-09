@@ -1,6 +1,6 @@
 import torch
 
-from quaternions import angle_between_quaternions
+from utils import angle_between_quaternions
 from utils import l1_loss, l2_loss, compute_ABC, project
 
 

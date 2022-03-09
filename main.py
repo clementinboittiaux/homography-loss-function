@@ -13,6 +13,7 @@ import losses
 import models
 from utils import batch_to_device, batch_errors, batch_compute_utils, log_poses, log_errors
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
