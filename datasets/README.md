@@ -1,27 +1,40 @@
-# Cambridge dataset
+# Dataset setup
 
-Here you can find instructions to setup the Cambridge dataset.
+Here you can find instructions to setup datasets for use with this code.
 
-## Description
+## Cambridge and 7-Scenes
 
-The dataset is composed of 6 outdoor scenes. For each image in each scene
-we have access to its pose and its 3D observations in the reconstructed model.
-
-## Setup
-
-This folder contains 7 scripts. There is one script per scene for individual scene setup and one
-script to setup all scenes at once.
-
-### Requirements
-Setup scripts require `wget` and `unzip` installed.
-
-### Installation
-For an individual scene setup, e.g. Shop Façade, simply run in a terminal:
-```bash
-./setup_shopfacade.sh
+We provide the script [datasetup.py](datasetup.py) for setting up Cambridge and 7-Scenes datasets. The script can be
+called with either the name of the dataset to setup, *e.g.*, `7-Scenes`, or the name of a specific scene, *e.g.*,
+`KingsCollege`. For example, if you want to setup the whole Cambridge dataset:
+```shell
+python datasetup.py Cambridge
+```
+Or if you want to only setup the *chess* scene of 7-Scenes dataset:
+```shell
+python datasetup.py chess
+```
+All possibilities can be accessed by running:
+```shell
+python datasetup.py -h
 ```
 
-If you want to setup all scenes at once, simply run:
-```bash
-./setup_all_scenes.sh
+
+## Custom dataset
+
+We also support custom datasets in **COLMAP** models format.  
+⚠️ Please note that only **RADIAL** camera models are supported for now.
+
+The custom dataset folder must contain:
+- The COLMAP model: `cameras`, `images` and `points3D` files in `.bin` or `.txt` format.
+- A folder named `images` containing all images in the model.
+- A file named `list_db.txt` with the name of all the images used for training, one image name per line.
+- A file named `list_query.txt` with the name of all the images used for testing, one image name per line.
+
+An example of `list_db.txt`:
+```text
+frame001.jpg
+frame002.jpg
+frame003.jpg
+...
 ```

@@ -367,7 +367,7 @@ class COLMAPDataset:
             respectively the names of database and query images (one name per line)
         """
 
-        print('COLMAPDataset is work in progress, only handles RADIAL camera model!')
+        print('COLMAPDataset is work in progress, only supports RADIAL camera model!')
 
         images_path = os.path.join(path, 'images')
         list_query = os.path.join(path, 'list_query.txt')
