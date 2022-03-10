@@ -5,6 +5,10 @@ loss functions in a simple end-to-end network similar to
 We implemented our homography-based loss functions and re-implemented PoseNet, Homoscedastic, Geometric and DSAC loss
 functions. We provide the code to train the network and evaluate their performance on the Cambridge dataset.
 
+<video width="320" height="240" controls>
+    <source src="assets/animation.mp4" type="video/mp4">
+</video>
+
 ## Installation
 
 ### Dataset setup
