@@ -22,7 +22,7 @@ python datasetup.py -h
 
 ## Custom dataset
 
-We also support custom datasets in **COLMAP** models format.  
+We also support custom datasets in **COLMAP** model format.  
 ⚠️ Please note that only **RADIAL** camera models are supported for now.
 
 The custom dataset folder must contain:
@@ -31,7 +31,7 @@ The custom dataset folder must contain:
 - A file named `list_db.txt` with the name of all the images used for training, one image name per line.
 - A file named `list_query.txt` with the name of all the images used for testing, one image name per line.
 
-An example of `list_db.txt`:
+An example of `list_db.txt` or `list_query.txt`:
 ```text
 frame001.jpg
 frame002.jpg
