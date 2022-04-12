@@ -16,7 +16,7 @@ from torch.nn.functional import normalize
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from hloc.hloc.utils.read_write_model import read_model
+from colmap.scripts.python.read_write_model import read_model
 
 # Image preprocessing pipeline according to PyTorch implementation
 preprocess = transforms.Compose([

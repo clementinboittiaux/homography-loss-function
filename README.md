@@ -14,7 +14,7 @@ We show other losses convergence
 ## Installation
 
 ### hLoc dependancy
-This code relies on hLoc for loading COLMAP models. To satisfy this dependancy, simply run:
+This code relies on COLMAP for loading COLMAP models. To satisfy this dependancy, simply run:
 ```shell
 git submodule update --init
 ```
