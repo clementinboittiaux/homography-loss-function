@@ -71,7 +71,7 @@ For each epoch, each image and each set, we save the estimated pose in the follo
 - `chat_q_w` is the world-to-camera quaternion representing the rotation of the image.
 
 ## Acknowledgements
-This work was supported by [Ifremer](https://wwz.ifremer.fr/).  
+This work was supported by [Ifremer](https://wwz.ifremer.fr/), [DYNI](https://dyni.pages.lis-lab.fr/) team of [LIS laboratory](https://www.lis-lab.fr/) and [COSMER laboratory](https://cosmer.univ-tln.fr/).  
 We also thank Sarlin *et al.* for the **hLoc** repository allowing us to read COLMAP models.
 
 ## License
