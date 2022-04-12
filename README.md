@@ -72,7 +72,6 @@ For each epoch, each image and each set, we save the estimated pose in the follo
 
 ## Acknowledgements
 This work was supported by [Ifremer](https://wwz.ifremer.fr/), [DYNI](https://dyni.pages.lis-lab.fr/) team of [LIS laboratory](https://www.lis-lab.fr/) and [COSMER laboratory](https://cosmer.univ-tln.fr/).  
-We also thank Sarlin *et al.* for the **hLoc** repository allowing us to read COLMAP models.
 
 ## License
 This code is released under the LGPLv3 licence. Please have a look at the licence file at the repository root.
