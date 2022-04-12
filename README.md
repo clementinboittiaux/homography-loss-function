@@ -7,6 +7,9 @@ and DSAC loss functions. We provide the code to train and test the network on Ca
 datasets.
 
 ![Convergence of homography loss](assets/animation.gif)
+*<div style="text-align: center;">Convergence of our proposed Homography loss</div>*  
+We show other losses convergence
+[on our YouTube channel](https://youtube.com/playlist?list=PLe92vnufKoYIIHrW5I268RYdX6aV4gTa6). 
 
 ## Installation
 

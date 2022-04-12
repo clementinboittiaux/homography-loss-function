@@ -31,6 +31,19 @@ The custom dataset folder must contain:
 - A file named `list_db.txt` with the name of all the images used for training, one image name per line.
 - A file named `list_query.txt` with the name of all the images used for testing, one image name per line.
 
+The final outline of the folder should look like this:
+> - mydataset
+>   - images
+>     - frame001.jpg
+>     - frame002.jpg
+>     - frame003.jpg
+>     - ...
+>   - cameras.bin
+>   - images.bin
+>   - points3D.bin
+>   - list_db.txt
+>   - list_query.txt
+
 An example of `list_db.txt` or `list_query.txt`:
 ```text
 frame001.jpg
