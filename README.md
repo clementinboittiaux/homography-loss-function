@@ -13,7 +13,7 @@ We show other losses convergence
 
 ## Installation
 
-### hLoc dependancy
+### COLMAP dependancy
 This code relies on COLMAP for loading COLMAP models. To satisfy this dependancy, simply run:
 ```shell
 git submodule update --init
@@ -78,3 +78,14 @@ This work was supported by [Ifremer](https://wwz.ifremer.fr/), [DYNI](https://dy
 
 ## License
 This code is released under the LGPLv3 licence. Please have a look at the licence file at the repository root.
+
+## Citation
+If you use this work for your research, please cite:
+```
+@article{boittiaux2022homographyloss,
+    author={Boittiaux, Clementin and Marxer, Ricard and Dune, Claire and Arnaubec, Aurelien and Hugel, Vincent},
+    journal={IEEE Robotics and Automation Letters},
+    title={Homography-based loss function for camera pose regression},
+    year={2022},
+}
+```
