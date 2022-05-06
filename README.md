@@ -1,10 +1,12 @@
-# Homography-based loss function for camera pose regression
+# Homography-Based Loss Function for Camera Pose Regression
 In this repository, we share our implementation of several camera pose regression
 loss functions in a simple end-to-end network similar to
 [PoseNet](https://openaccess.thecvf.com/content_iccv_2015/html/Kendall_PoseNet_A_Convolutional_ICCV_2015_paper.html).
 We implemented the homography-based loss functions introduced in our paper alongside PoseNet, Homoscedastic, Geometric
 and DSAC loss functions. We provide the code to train and test the network on Cambridge, 7-Scenes and custom COLMAP
 datasets.
+
+Our paper [Homography-Based Loss Function for Camera Pose Regression](https://arxiv.org/abs/2205.01937) is published in IEEE Robotics and Automation Letters 2022.
 
 ![Convergence of homography loss](assets/animation.gif)
 *<p align="center">Convergence of our proposed Homography loss</p>*  
@@ -83,9 +85,12 @@ This code is released under the LGPLv3 licence. Please have a look at the licenc
 If you use this work for your research, please cite:
 ```
 @article{boittiaux2022homographyloss,
-    author={Boittiaux, Clementin and Marxer, Ricard and Dune, Claire and Arnaubec, Aurelien and Hugel, Vincent},
-    journal={IEEE Robotics and Automation Letters},
-    title={Homography-based loss function for camera pose regression},
-    year={2022},
+  author={Boittiaux, Clémentin and Marxer, Ricard and Dune, Claire and Arnaubec, Aurélien and Hugel, Vincent},
+  journal={IEEE Robotics and Automation Letters},
+  title={Homography-Based Loss Function for Camera Pose Regression},
+  year={2022},
+  volume={7},
+  number={3},
+  pages={6242-6249},
 }
 ```
