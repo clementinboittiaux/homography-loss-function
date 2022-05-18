@@ -4,7 +4,7 @@ from utils import angle_between_quaternions, l1_loss, l2_loss, compute_ABC, proj
 
 
 class LocalHomographyLoss(torch.nn.Module):
-    def __init__(self, device='cuda'):
+    def __init__(self, device='cpu'):
         super().__init__()
 
         # `c_n` is the normal vector of the plane inducing the homographies in the ground-truth camera frame
@@ -27,7 +27,7 @@ class LocalHomographyLoss(torch.nn.Module):
 
 
 class GlobalHomographyLoss(torch.nn.Module):
-    def __init__(self, xmin, xmax, device='cuda'):
+    def __init__(self, xmin, xmax, device='cpu'):
         """
         `xmin` is the minimum distance of observations across all frames.
         `xmax` is the maximum distance of observations across all frames.
@@ -71,7 +71,7 @@ class PoseNetLoss(torch.nn.Module):
 
 
 class HomoscedasticLoss(torch.nn.Module):
-    def __init__(self, s_hat_t, s_hat_q, device='cuda'):
+    def __init__(self, s_hat_t, s_hat_q, device='cpu'):
         super().__init__()
         self.s_hat_t = torch.nn.Parameter(torch.tensor(s_hat_t, dtype=torch.float32, device=device))
         self.s_hat_q = torch.nn.Parameter(torch.tensor(s_hat_q, dtype=torch.float32, device=device))

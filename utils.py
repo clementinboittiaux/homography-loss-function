@@ -65,9 +65,9 @@ def compute_ABC(w_t_c, c_R_w, w_t_chat, chat_R_w, c_n, eye):
 
 def batch_to_device(batch, device):
     """
-    If `device` is 'cuda', moves all data in batch to the GPU.
+    If `device` is not 'cpu', moves all data in batch to the GPU.
     """
-    if device == 'cuda':
+    if device != 'cpu':
         for key, value in batch.items():
             if type(value) is torch.Tensor:
                 batch[key] = value.to(device)
