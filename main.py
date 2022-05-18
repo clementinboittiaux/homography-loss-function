@@ -33,8 +33,8 @@ if __name__ == '__main__':
         help='path to weights with which the model will be initialized'
     )
     parser.add_argument(
-        '--cuda', action='store_true',
-        help='train the model on GPU (may crash if cuda is not available)'
+        '--device', default='cpu',
+        help='set the device to train the model, `cuda` for GPU'
     )
     args = parser.parse_args()
 
@@ -44,15 +44,10 @@ if __name__ == '__main__':
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-    # Set the device
-    device = 'cpu'
-    if args.cuda:
-        device = 'cuda'
-
     # Load model
     model = models.load_model(args.weights)
     model.train()
-    model.to(device)
+    model.to(args.device)
 
     # Load dataset
     dataset_name = os.path.basename(os.path.normpath(args.path))
@@ -89,19 +84,19 @@ if __name__ == '__main__':
 
     # Instantiate loss
     if args.loss == 'local_homography':
-        criterion = losses.LocalHomographyLoss(device=device)
+        criterion = losses.LocalHomographyLoss(device=args.device)
         eps = 1e-14  # Adam optimizer epsilon is set to 1e-14 for homography losses
     elif args.loss == 'global_homography':
         criterion = losses.GlobalHomographyLoss(
             xmin=dataset.train_global_xmin,
             xmax=dataset.train_global_xmax,
-            device=device
+            device=args.device
         )
         eps = 1e-14  # Adam optimizer epsilon is set to 1e-14 for homography losses
     elif args.loss == 'posenet':
         criterion = losses.PoseNetLoss(beta=500)
     elif args.loss == 'homoscedastic':
-        criterion = losses.HomoscedasticLoss(s_hat_t=0.0, s_hat_q=-3.0, device=device)
+        criterion = losses.HomoscedasticLoss(s_hat_t=0.0, s_hat_q=-3.0, device=args.device)
     elif args.loss == 'geometric':
         criterion = losses.GeometricLoss()
     elif args.loss == 'dsac':
@@ -133,7 +128,7 @@ if __name__ == '__main__':
             optimizer.zero_grad()
 
             # Move all batch data to proper device
-            batch = batch_to_device(batch, device)
+            batch = batch_to_device(batch, args.device)
 
             # Estimate the pose from the image
             batch['w_t_chat'], batch['chat_q_w'] = model(batch['image']).split([3, 4], dim=1)
@@ -175,7 +170,7 @@ if __name__ == '__main__':
 
             for batch in test_loader:
                 # Compute test poses estimations
-                batch = batch_to_device(batch, device)
+                batch = batch_to_device(batch, args.device)
                 batch['w_t_chat'], batch['chat_q_w'] = model(batch['image']).split([3, 4], dim=1)
                 batch_compute_utils(batch)
 
