@@ -397,19 +397,27 @@ class COLMAPDataset:
                 image = images[image_name_to_id[image_name]]
                 camera = cameras[image.camera_id]
 
+                im = cv2.imread(os.path.join(images_path, image_name))
+
                 f, u0, v0, k1, k2 = camera.params
                 K = np.array([
                     [f, 0, u0],
                     [0, f, v0],
                     [0, 0, 1]
                 ])
-                new_K = torch.tensor(K)
+                dist_coeffs = np.array([k1, k2, 0, 0])
+                new_K, roi = cv2.getOptimalNewCameraMatrix(
+                    cameraMatrix=K,
+                    distCoeffs=dist_coeffs,
+                    imageSize=im.shape[:2][::-1],
+                    alpha=0,
+                    centerPrincipalPoint=True
+                )
+                new_K = torch.tensor(new_K)
                 new_K[0, 2] = camera.width / 2
                 new_K[1, 2] = camera.height / 2
-                dist_coeffs = np.array([k1, k2, 0, 0])
 
                 # Undistort image and center its principal point
-                im = cv2.imread(os.path.join(images_path, image_name))
                 im = cv2.undistort(im, K, dist_coeffs, newCameraMatrix=new_K.numpy())
                 im = preprocess(Image.fromarray(im[:, :, ::-1]))
 
