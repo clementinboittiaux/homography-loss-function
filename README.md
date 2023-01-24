@@ -85,7 +85,11 @@ This code is released under the LGPLv3 licence. Please have a look at the licenc
 If you use this work for your research, please cite:
 ```
 @article{boittiaux2022homographyloss,
-  author={Boittiaux, Clémentin and Marxer, Ricard and Dune, Claire and Arnaubec, Aurélien and Hugel, Vincent},
+  author={Boittiaux, Cl\'ementin and
+          Marxer, Ricard and
+          Dune, Claire and
+          Arnaubec, Aur\'elien and
+          Hugel, Vincent},
   journal={IEEE Robotics and Automation Letters},
   title={Homography-Based Loss Function for Camera Pose Regression},
   year={2022},
